@@ -7,6 +7,9 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.Collections;
+using System.Linq;
 
 namespace Intersection
 {
@@ -21,7 +24,9 @@ namespace Intersection
 		/// <summary>
 		///		Sequences of 3 numbers, used to describe polygons
 		/// </summary>
-        public int[] interTriangles;
+        private int[] interTriangles;
+
+		private int[] lastInterTriangles;
 
 		/// <summary>
 		///		Last intersected W-coordinate
@@ -47,9 +52,10 @@ namespace Intersection
             Vertex4D v03 = new Vertex4D(0, 2, 0, 0);
 
             //Large square, located at w = 1
-            Vertex4D v10 = new Vertex4D(0, 0, 0, 1);
-            Vertex4D v11 = new Vertex4D(-2, 2, 0, 1);
-            Vertex4D v12 = new Vertex4D(2, 2, 0, 1);
+			//Lower triangle prolong to w = 3
+            Vertex4D v10 = new Vertex4D(0, 0, 0, 3);
+            Vertex4D v11 = new Vertex4D(-2, 2, 0, 3);
+            Vertex4D v12 = new Vertex4D(2, 2, 0, 3);
             Vertex4D v13 = new Vertex4D(0, 4, 0, 1);
 
 			
@@ -72,15 +78,16 @@ namespace Intersection
 
 		/// <summary>
 		///		<para>Generates new intersection, or returns last generated, depends on value of w</para>
-		///		<para>Return tuple with vertices and update status (new or old vertices used)</para>
+		///		<para>Return tuple with vertices, their triangles and update status (new or old vertices used)</para>
 		/// </summary>
 		/// <param name="w">depth of W</param>
 		/// <returns>
 		///		<para>Tuple</para>
 		///		<para>.vertices - array with vertices</para>
+		///		<para>.triangles </para>
 		///		<para>.updated - is vertices old, or newly generated</para>
 		/// </returns>
-		public (Vertex4D[] vertices, bool updated) GetIntersection(float w)
+		public (Vertex4D[] vertices, int[] triangles, bool updated) GetIntersection(float w)
         {
 	        bool update = lastIntersection == null || w != lastW;
 	        if (update)
@@ -88,11 +95,35 @@ namespace Intersection
 		        lastW = w;
 				lastIntersection = new Vertex4D[this.interPoints.Length];
 
-		        for (int i = 0; i < this.interPoints.Length; ++i)
-			        lastIntersection[i] = this.interPoints[i].Intersect(w);
+				// List of edges numbers, that are null because are not exist in particular w intersection
+				// TODO Check nulled edges with previous generated, if same - use last triangles
+				var nulledEdges = new List<int>();
+
+				for (int i = 0; i < this.interPoints.Length; ++i)
+				{
+					var vertex = this.interPoints[i].Intersect(w);
+					// TODO don't include null to final list, offset new values
+					if (vertex == null)
+						nulledEdges.Add(i);
+
+					lastIntersection[i] = vertex;
+				}
+
+				// New generated list of triangles
+				var triangles = new List<int>();
+
+				// If any vertex in triplet is in null-list -- do not include them to final list
+				for (int i = 0; i < interTriangles.Length; i += 3)
+				{
+					if(nulledEdges.Contains(interTriangles[i]) || nulledEdges.Contains(interTriangles[i+1]) || nulledEdges.Contains(interTriangles[i+2]))
+						continue;
+					triangles.AddRange(new int[]{ interTriangles[i] , interTriangles[i + 1], interTriangles[i + 2] });
+				}
+
+				lastInterTriangles = triangles.ToArray();
 	        }
 
-	        return (lastIntersection, update);
+	        return (lastIntersection, lastInterTriangles, update);
         }
     }
 }

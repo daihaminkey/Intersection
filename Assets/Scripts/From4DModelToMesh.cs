@@ -19,7 +19,7 @@ namespace Intersection
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
     public class From4DModelToMesh : MonoBehaviour
     {
-	    [Range(0f, 1f)]
+	    [Range(-5f, 5f)]
 	    public float interW = 1f;
 
 		private Vector3[] vertices;
@@ -50,10 +50,11 @@ namespace Intersection
 
 			if (intersect.updated)
 			{
+				Debug.Log(intersect.triangles.Length);
 				GetComponent<MeshFilter>().mesh = mesh = new Mesh();
 				mesh.name = "Procedural Grid";
 				mesh.vertices = intersect.vertices.Get3DVertices();
-				mesh.triangles = model.interTriangles;
+				mesh.triangles = intersect.triangles;
 				mesh.RecalculateNormals();
 			}
         }
@@ -64,7 +65,6 @@ namespace Intersection
             {
                 return;
             }
-
 
             Gizmos.color = Color.black;
             foreach (var v in vertices)
@@ -83,9 +83,9 @@ namespace Intersection
         public static Vector3[] Get3DVertices(this Vertex4D[] arr)
         {
             Vector3[] ret = new Vector3[arr.Length];
-
-            for (int i = 0; i < arr.Length; ++i)
-                ret[i] = arr[i].GetVector3(); 
+            //TODO don't include null to final list in Model4.cs
+			for (int i = 0; i < arr.Length; ++i)
+	            ret[i] = arr[i] == null ? new Vector3(0,0,0) : arr[i].GetVector3(); 
 
             return ret;
         }
