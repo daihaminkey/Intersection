@@ -11,14 +11,14 @@ namespace Intersection
 {
 
     /// <summary>
-    /// Point in 4D space
+    ///		Point in 4D space
     /// </summary>
     public class Vertex4D
     {
         public float x, y, z, w;
 
         /// <summary>
-        /// Creates 4D vertex with zeroes in all coordinates
+        ///		Creates 4D vertex with zeroes in all coordinates
         /// </summary>
         public Vertex4D()
         {
@@ -26,7 +26,7 @@ namespace Intersection
         }
 
         /// <summary>
-        /// Creates 4D vertex
+        ///		Creates 4D vertex
         /// </summary>
         /// <param name="x">X coordinate</param>
         /// <param name="y">Y coordinate</param>

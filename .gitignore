@@ -5,8 +5,7 @@ obj/
 Packages/
 ProjectSettings/
 Temp/
-*.sln
-*.csproj
+*.sln.DotSettings.user
 *.meta
 .vs/
 

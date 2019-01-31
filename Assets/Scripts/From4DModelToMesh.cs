@@ -1,12 +1,11 @@
 ﻿/*
- * Another row and temporary Unity scripts. It contains data about simple 4D model, 
- * converts it to 3D model (yet without intersection, because Edge-based triangle generator isn't exist),
- * and renders it as a Unity Mesh (for the sake of simplisity - each frame) 
+ * Another row and temporary Unity script. It contains data about simple 4D model, 
+ * converts it to 3D model with respect to intersection, and renders it as a Unity Mesh 
  * 
  * Also it contains first approach of Universal -> Unity format Vertex4D conversion,
  * done with extension methods
  * 
- * @daihaminkey, 27.12.2018
+ * @daihaminkey, 31.01.2019
  */
 
 using System.Collections;
@@ -20,12 +19,15 @@ namespace Intersection
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
     public class From4DModelToMesh : MonoBehaviour
     {
+	    [Range(0f, 1f)]
+	    public float interW = 1f;
 
-        private Vector3[] vertices;
+		private Vector3[] vertices;
 
         private Mesh mesh;
 
-        Model4D tempModel = new Model4D();
+		//Should be loaded external, but now contains mock, so it's okay
+        Model4D model = new Model4D();
 
         void Start()
         {
@@ -44,12 +46,29 @@ namespace Intersection
 
         private void Generate()
         {
-            GetComponent<MeshFilter>().mesh = mesh = new Mesh();
-            mesh.name = "Procedural Grid";
+			var intersect = model.GetIntersection(interW);
 
-            mesh.vertices = tempModel.vertices.Get3DVertices();
-            mesh.triangles = tempModel.triangles;
-            mesh.RecalculateNormals();
+			if (intersect.updated)
+			{
+				GetComponent<MeshFilter>().mesh = mesh = new Mesh();
+				mesh.name = "Procedural Grid";
+				mesh.vertices = intersect.vertices.Get3DVertices();
+				mesh.triangles = model.interTriangles;
+				mesh.RecalculateNormals();
+			}
+        }
+
+        private void OnDrawGizmos()
+        {
+            if (vertices == null)
+            {
+                return;
+            }
+
+
+            Gizmos.color = Color.black;
+            foreach (var v in vertices)
+	            Gizmos.DrawSphere(v, 0.1f);
         }
 
     }
